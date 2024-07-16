@@ -2,8 +2,8 @@
   <div >
     <img src="./assets/logo.png" alt="pokemon">
     <h1>¿Quién es ese Pokemón?</h1>
-    <h5>Pokémons descubiertos: </h5> 
-    <h5 class="amarillo">{{ countGuessed }}</h5>
+    <h5>Pokemones Capturados:</h5> 
+    <h5><img class="pokeball"  v-for=" n in countGuessed " :key="n" src="../public/favicon.png" alt=""></h5>
     <div class="container">
       <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4">
           <div class="col" v-for="(pokemon) in pokemones" :key="pokemon.name">
@@ -18,18 +18,18 @@
 </template>
 
 <script>
-import axios from 'axios';
-import PokeCard from './components/PokeCard.vue';
+import axios from "axios";
+import PokeCard from "./components/PokeCard.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     PokeCard,
   },
   data() {
     return {
       pokemones: [],
-      guessInput: '',
+      guessInput: "",
     };
   },
   async created() {
@@ -38,38 +38,47 @@ export default {
   },
   computed: {
     countGuessed() {
-      return this.pokemones.filter(pokemon => pokemon.guessed).length;
-    }
+      return this.pokemones.filter((pokemon) => pokemon.guessed).length;
+    },
   },
   methods: {
     async getPokemons() {
-      const random = Math.floor(Math.random() * 151) 
-      const URL_BASE = `https://pokeapi.co/api/v2/pokemon/?limit=20&offset=${random}`;
-      try {
-        const responseApi = await axios.get(URL_BASE);
-        const primerLlamado = responseApi.data.results;
+  const randomOffset = Math.floor(Math.random() * 60);
+  const URL_BASE = `https://pokeapi.co/api/v2/pokemon/?limit=60&offset=${randomOffset}`;
 
-        const pokemonResponse = await Promise.all(
-          primerLlamado.map(async (pokemon) => {
-            const { data } = await axios.get(pokemon.url);
-            return { name: data.name, image: data.sprites.other.dream_world.front_default, guessed: false };
-          })
-        );
+  try {
+    const responseApi = await axios.get(URL_BASE);
+    const pokemonList = responseApi.data.results;
 
-        return pokemonResponse;
-      } catch (error) {
-        console.error("Error fetching Pokémon data: ", error);
-        return [];
-      }
-    },
+    const shuffledPokemons = pokemonList.sort(() => 0.5 - Math.random());
+    const selectedPokemons = shuffledPokemons.slice(0, 20);
+
+    const pokemonResponse = await Promise.all(
+      selectedPokemons.map(async (pokemon) => {
+        const { data } = await axios.get(pokemon.url);
+        return {
+          name: data.name,
+          image: data.sprites.other.dream_world.front_default,
+          guessed: false,
+        };
+      })
+    );
+
+    return pokemonResponse;
+  } catch (error) {
+    console.error("Error fetching Pokémon data: ", error);
+    return [];
+  }
+},
+
     checkGuess(pokemon, guess) {
       if (guess.toLowerCase() === pokemon.name.toLowerCase()) {
         pokemon.guessed = true;
-        this.guessInput = ''; 
+        this.guessInput = "";
       } else {
-        alert('Nombre incorrecto, inténtalo de nuevo.');
+        alert("Nombre incorrecto, inténtalo de nuevo.");
       }
-    }
+    },
   },
 };
 </script>
@@ -80,11 +89,16 @@ body {
   color: #ffffff;
   margin-top: 60px;
   font-family: "Press Start 2P", system-ui;
-  background-color: brown;
+  background-color: #000000;
 }
 
-.amarillo {
-  color: rgb(198, 191, 86);
+h1, h5 {
+  padding-top: 1rem;
+}
+
+.pokeball {
+  width: 30px;
+  margin-right: 0.3rem;
 }
 
 .card {
@@ -98,7 +112,6 @@ body {
 }
 
 img {
-  
-  width: clamp(300px, 30vw, 600px);
+  width: clamp(300px, 40vw, 600px);
 }
 </style>
